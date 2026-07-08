@@ -207,7 +207,7 @@
    KONFIGURASI — ganti dengan URL Web App Apps Script Anda
    ============================================================ */
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbwiLHkPXgssAQVgY_0uGrMJlP0hxPKGl9qGmwR0YTMNR05QSNtt_Yu_xJWE5q7CXlfk0g/exec"
+  API_URL: "https://script.google.com/macros/s/AKfycbxKzdmBI7OVUM5LTjsgia-MoUB9nojaHVLBkJbD_7jHqMpcaYLWfiRpn3FfzX4-H1lDag/exec"
 };
 
 /* Daftar tetap Jenis Pekerjaan (sesuai permintaan, tidak perlu ke server) */
@@ -676,11 +676,12 @@ async function openRencanaForm(id){
       <input type="text" id="f_LinkIzinKerja" placeholder="https://..."></div>
 
     <div class="field"><label>Penanggung Jawab Pekerjaan</label>
-      <input type="text" id="f_PJ" placeholder="Nama penanggung jawab"></div>
+      <input type="text" id="f_PJ" list="dl_personel" placeholder="Ketik untuk cari nama"></div>
     <div class="field"><label>Pengawas K3</label>
-      <input type="text" id="f_PK3" placeholder="Nama pengawas K3"></div>
+      <input type="text" id="f_PK3" list="dl_personel" placeholder="Ketik untuk cari nama"></div>
     <div class="field"><label>Pengawas Pekerjaan</label>
-      <input type="text" id="f_PP" placeholder="Nama pengawas pekerjaan"></div>
+      <input type="text" id="f_PP" list="dl_personel" placeholder="Ketik untuk cari nama"></div>
+    <datalist id="dl_personel">${opt(m.Personel)}</datalist>
     <div class="field"><label>Jumlah Pelaksana</label>
       <input type="number" id="f_JumlahPelaksana" placeholder="Jumlah personil"></div>
 

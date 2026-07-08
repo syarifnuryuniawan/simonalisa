@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SIMONALISA — UPT Padang Sidempuan</title>
+<link rel="icon" href="data:,">
+<style>
+  :root{
+    --biru-tua:#0B3D63;
+    --biru:#0F5FA6;
+    --biru-muda:#E8F1FA;
+    --amber:#FE9800;
+    --amber-dark:#D97D00;
+    --hijau:#1E8E5A;
+    --merah:#D64545;
+    --abu:#F4F6F8;
+    --garis:#E1E7EC;
+    --teks:#1B2733;
+    --teks-lemah:#6B7A88;
+    --radius:14px;
+    --shadow:0 2px 10px rgba(11,61,99,.08);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--abu);color:var(--teks);}
+  h1,h2,h3{margin:0;font-weight:700;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+  #app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--abu);display:flex;flex-direction:column;position:relative;}
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{position:fixed;inset:0;background:linear-gradient(160deg,var(--biru-tua),var(--biru) 70%);display:flex;align-items:center;justify-content:center;padding:24px;z-index:50;}
+  .login-card{background:#fff;border-radius:20px;padding:32px 24px;width:100%;max-width:360px;box-shadow:0 20px 50px rgba(0,0,0,.25);}
+  .brand{display:flex;flex-direction:column;align-items:center;margin-bottom:22px;}
+  .brand .logo{width:56px;height:56px;border-radius:16px;background:var(--amber);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:22px;margin-bottom:10px;}
+  .brand h1{font-size:20px;color:var(--biru-tua);letter-spacing:.5px;}
+  .brand p{margin:2px 0 0;font-size:12.5px;color:var(--teks-lemah);text-align:center;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;color:var(--teks-lemah);margin-bottom:6px;font-weight:600;}
+  .field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1.5px solid var(--garis);border-radius:10px;font-size:15px;background:#fbfcfd;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--biru);}
+  .btn{border:none;border-radius:11px;padding:12px 18px;font-size:15px;font-weight:700;width:100%;transition:.15s;}
+  .btn-primary{background:var(--amber);color:#fff;}
+  .btn-primary:active{background:var(--amber-dark);}
+  .btn-outline{background:#fff;border:1.5px solid var(--garis);color:var(--teks);}
+  .btn-danger{background:#fdeaea;color:var(--merah);}
+  .error-msg{color:var(--merah);font-size:13px;margin-top:8px;text-align:center;min-height:16px;}
+
+  /* ---------- HEADER ---------- */
+  header.topbar{background:linear-gradient(120deg,var(--biru-tua),var(--biru));color:#fff;padding:18px 18px 44px;position:relative;}
+  header.topbar .row{display:flex;justify-content:space-between;align-items:flex-start;}
+  header.topbar h1{font-size:18px;}
+  header.topbar .sub{font-size:12px;opacity:.85;margin-top:2px;}
+  .avatar{width:38px;height:38px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+  main{flex:1;padding:0 16px 90px;margin-top:-28px;}
+
+  /* ---------- DASHBOARD ---------- */
+  .grid-menu{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px;}
+  .menu-card{background:#fff;border-radius:var(--radius);padding:18px 14px;box-shadow:var(--shadow);text-align:left;border:none;}
+  .menu-card .ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:10px;}
+  .menu-card h3{font-size:14px;}
+  .menu-card p{font-size:11.5px;color:var(--teks-lemah);margin:3px 0 0;}
+  .stat-row{display:flex;gap:10px;margin-top:14px;}
+  .stat{flex:1;background:#fff;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);text-align:center;}
+  .stat b{font-size:22px;display:block;color:var(--biru-tua);}
+  .stat span{font-size:11px;color:var(--teks-lemah);}
+
+  /* ---------- TABS/NAV ---------- */
+  nav.bottomnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--garis);display:flex;max-width:520px;margin:0 auto;box-shadow:0 -2px 12px rgba(0,0,0,.06);z-index:20;}
+  nav.bottomnav button{flex:1;background:none;border:none;padding:9px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--teks-lemah);font-size:10.5px;font-weight:600;}
+  nav.bottomnav button.active{color:var(--amber-dark);}
+  nav.bottomnav .ic{font-size:19px;}
+
+  /* ---------- PAGE HEADER ---------- */
+  .page-head{display:flex;align-items:center;gap:10px;padding-top:16px;margin-bottom:10px;}
+  .page-head h2{font-size:17px;color:var(--biru-tua);}
+  .back-btn{background:#fff;border:1px solid var(--garis);width:34px;height:34px;border-radius:10px;font-size:16px;}
+
+  .datebar{display:flex;gap:8px;align-items:center;background:#fff;padding:10px 12px;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;}
+  .datebar input[type=date]{flex:1;border:none;font-size:14.5px;font-weight:600;color:var(--biru-tua);}
+  .icon-btn{background:var(--biru-muda);border:none;width:36px;height:36px;border-radius:9px;font-size:15px;color:var(--biru);}
+
+  .section-label{font-size:11.5px;font-weight:800;color:var(--teks-lemah);letter-spacing:.6px;text-transform:uppercase;margin:16px 2px 8px;}
+
+  .work-card{background:#fff;border-radius:var(--radius);padding:13px 14px;margin-bottom:9px;box-shadow:var(--shadow);border-left:4px solid var(--biru);}
+  .work-card.padam{border-left-color:var(--merah);}
+  .work-card .top{display:flex;justify-content:space-between;gap:8px;}
+  .work-card h4{font-size:14px;line-height:1.35;}
+  .work-card .meta{font-size:11.5px;color:var(--teks-lemah);margin-top:5px;line-height:1.6;}
+  .badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;height:fit-content;}
+  .badge.padam{background:#fdeaea;color:var(--merah);}
+  .badge.tidak{background:#e8f6ee;color:var(--hijau);}
+  .badge.selesai{background:#e8f6ee;color:var(--hijau);}
+  .badge.proses{background:#fff4e0;color:var(--amber-dark);}
+  .badge.batal{background:#fdeaea;color:var(--merah);}
+  .badge.belum{background:#eef1f4;color:var(--teks-lemah);}
+  .work-card .actions{display:flex;gap:8px;margin-top:10px;}
+  .work-card .actions button{flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid var(--garis);background:#fafbfc;}
+  .empty-state{text-align:center;padding:40px 16px;color:var(--teks-lemah);}
+  .empty-state .ic{font-size:36px;margin-bottom:8px;}
+
+  .fab{position:fixed;bottom:80px;right:calc(50% - 260px + 18px);width:56px;height:56px;border-radius:50%;background:var(--amber);color:#fff;font-size:26px;border:none;box-shadow:0 6px 16px rgba(254,152,0,.45);z-index:25;}
+  @media(max-width:560px){.fab{right:18px;}}
+
+  /* ---------- MODAL / SHEET ---------- */
+  .sheet-overlay{position:fixed;inset:0;background:rgba(11,20,30,.5);display:none;align-items:flex-end;z-index:60;}
+  .sheet-overlay.open{display:flex;}
+  .sheet{background:#fff;width:100%;max-width:520px;margin:0 auto;border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;padding:18px 18px 26px;}
+  .sheet-handle{width:38px;height:4px;background:var(--garis);border-radius:4px;margin:0 auto 14px;}
+  .sheet h2{font-size:17px;color:var(--biru-tua);margin-bottom:4px;}
+  .sheet .sub{font-size:12.5px;color:var(--teks-lemah);margin-bottom:16px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .radio-group{display:flex;gap:10px;}
+  .radio-opt{flex:1;border:1.5px solid var(--garis);border-radius:10px;padding:10px;text-align:center;font-size:13.5px;font-weight:600;color:var(--teks-lemah);}
+  .radio-opt.sel{border-color:var(--biru);background:var(--biru-muda);color:var(--biru-tua);}
+  .sheet-actions{display:flex;gap:10px;margin-top:18px;}
+  .close-x{position:absolute;top:16px;right:18px;background:var(--abu);border:none;width:30px;height:30px;border-radius:50%;font-size:14px;color:var(--teks-lemah);}
+
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--teks);color:#fff;padding:11px 20px;border-radius:30px;font-size:13.5px;z-index:80;opacity:0;transition:.25s;pointer-events:none;}
+  .toast.show{opacity:1;bottom:110px;}
+
+  .search-bar{display:flex;gap:8px;background:#fff;border-radius:var(--radius);padding:10px 12px;box-shadow:var(--shadow);margin-bottom:14px;align-items:center;}
+  .search-bar input{flex:1;border:none;font-size:14px;}
+
+  .photo-row{display:flex;gap:10px;margin-top:6px;}
+  .photo-slot{flex:1;aspect-ratio:1;border-radius:12px;border:1.5px dashed var(--garis);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;background:#fafbfc;color:var(--teks-lemah);font-size:12px;flex-direction:column;gap:4px;}
+  .photo-slot img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+
+  .loader{border:3px solid var(--garis);border-top-color:var(--amber);border-radius:50%;width:22px;height:22px;animation:spin .8s linear infinite;margin:0 auto;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .hidden{display:none !important;}
+  a{color:var(--biru);}
+</style>
+</head>
+<body>
+
+<!-- ============================= LOGIN ============================= -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand">
+      <div class="logo">SL</div>
+      <h1>SIMONALISA</h1>
+      <p>Sistem Monitoring Rencana &amp; Realisasi Kerja<br>UPT Padang Sidempuan</p>
+    </div>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="Masukkan username" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="Masukkan password" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" id="btnLogin">Masuk</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ============================= APP ============================= -->
+<div id="app" class="hidden">
+
+  <header class="topbar">
+    <div class="row">
+      <div>
+        <h1>SIMONALISA</h1>
+        <div class="sub">UPT Padang Sidempuan · <span id="todayLabel"></span></div>
+      </div>
+      <div class="avatar" id="avatarInitial">-</div>
+    </div>
+  </header>
+
+  <main id="mainContent"></main>
+
+  <nav class="bottomnav">
+    <button data-page="dashboard" class="active"><span class="ic">🏠</span>Beranda</button>
+    <button data-page="rencana"><span class="ic">🗓️</span>Rencana</button>
+    <button data-page="realisasi"><span class="ic">✅</span>Realisasi</button>
+    <button data-page="alatuji"><span class="ic">🧰</span>Alat Uji</button>
+    <button data-page="akun"><span class="ic">👤</span>Akun</button>
+  </nav>
+
+  <button class="fab hidden" id="fabAdd">+</button>
+</div>
+
+<!-- ============================= SHEET / MODAL ============================= -->
+<div class="sheet-overlay" id="sheetOverlay">
+  <div class="sheet" id="sheetContent" style="position:relative;"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   KONFIGURASI — ganti dengan URL Web App Apps Script Anda
+   ============================================================ */
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbwVuNPI4HuerCAYhLvGJHO34t0tUjnPkqWVWaOGV2qwRWrdOrFGMzxX6yNmzEszoEYCXA/exec"
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let STATE = {
+  token: localStorage.getItem("sl_token") || null,
+  nama: localStorage.getItem("sl_nama") || "",
+  role: localStorage.getItem("sl_role") || "",
+  master: null,
+  page: "dashboard",
+  tglRencana: addDays(new Date(), 1),
+  tglRealisasi: new Date(),
+  rencanaCache: {},
+  alatujiCache: null,
+  editingId: null
+};
+
+const UNIT_LIST = ["ULTG KISARAN","ULTG PADANG SIDEMPUAN","PDKB RING","PDKB GI"];
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function fmtDMY(d){
+  const dd=String(d.getDate()).padStart(2,"0"), mm=String(d.getMonth()+1).padStart(2,"0");
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+function fmtISO(d){
+  const dd=String(d.getDate()).padStart(2,"0"), mm=String(d.getMonth()+1).padStart(2,"0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+function isoToDate(iso){ const [y,m,d]=iso.split("-").map(Number); return new Date(y,m-1,d); }
+function addDays(d,n){ const c=new Date(d); c.setDate(c.getDate()+n); return c; }
+const HARI=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+const BULAN=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+function displayTgl(d){ return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`; }
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2400);
+}
+function esc(s){ return (s===undefined||s===null)?"":s.toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ============================================================
+   API — GET (tanpa preflight) & POST (text/plain agar tanpa preflight)
+   ============================================================ */
+async function apiGet(action, params={}){
+  const usp=new URLSearchParams({action, ...params});
+  const res=await fetch(`${CONFIG.API_URL}?${usp.toString()}`);
+  const json=await res.json();
+  if(!json.ok) throw new Error(json.error||"Terjadi kesalahan");
+  return json.data;
+}
+async function apiPost(action, payload={}){
+  const body=JSON.stringify({action, token: STATE.token, ...payload});
+  const res=await fetch(CONFIG.API_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body
+  });
+  const json=await res.json();
+  if(!json.ok) throw new Error(json.error||"Terjadi kesalahan");
+  return json;
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+document.getElementById("btnLogin").addEventListener("click", doLogin);
+document.getElementById("loginPass").addEventListener("keydown",e=>{ if(e.key==="Enter") doLogin(); });
+
+async function doLogin(){
+  const username=document.getElementById("loginUser").value.trim();
+  const password=document.getElementById("loginPass").value;
+  const errEl=document.getElementById("loginError");
+  errEl.textContent="";
+  if(!username||!password){ errEl.textContent="Isi username dan password"; return; }
+  const btn=document.getElementById("btnLogin");
+  btn.disabled=true; btn.textContent="Memproses...";
+  try{
+    const body=JSON.stringify({action:"login",username,password});
+    const res=await fetch(CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body});
+    const json=await res.json();
+    if(!json.ok){ errEl.textContent=json.error||"Login gagal"; return; }
+    STATE.token=json.token; STATE.nama=json.nama; STATE.role=json.role;
+    localStorage.setItem("sl_token",json.token);
+    localStorage.setItem("sl_nama",json.nama);
+    localStorage.setItem("sl_role",json.role||"");
+    enterApp();
+  }catch(e){
+    errEl.textContent="Gagal terhubung ke server. Cek koneksi / URL API.";
+  }finally{
+    btn.disabled=false; btn.textContent="Masuk";
+  }
+}
+
+function doLogout(){
+  apiPost("logout").catch(()=>{});
+  localStorage.removeItem("sl_token"); localStorage.removeItem("sl_nama"); localStorage.removeItem("sl_role");
+  STATE.token=null;
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("loginScreen").style.display="flex";
+}
+
+async function enterApp(){
+  document.getElementById("loginScreen").style.display="none";
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("avatarInitial").textContent=(STATE.nama||"?").charAt(0).toUpperCase();
+  document.getElementById("todayLabel").textContent=displayTgl(new Date());
+  try{ STATE.master=await apiGet("masterdata"); }catch(e){ STATE.master={}; }
+  goto("dashboard");
+}
+
+/* ============================================================
+   NAVIGASI
+   ============================================================ */
+document.querySelectorAll("nav.bottomnav button").forEach(btn=>{
+  btn.addEventListener("click",()=>goto(btn.dataset.page));
+});
+document.getElementById("fabAdd").addEventListener("click",()=>{
+  if(STATE.page==="rencana") openRencanaForm();
+  if(STATE.page==="alatuji") openAlatUjiForm();
+});
+
+function goto(page){
+  STATE.page=page;
+  document.querySelectorAll("nav.bottomnav button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+  const fab=document.getElementById("fabAdd");
+  fab.classList.toggle("hidden", !(page==="rencana"||page==="alatuji"));
+  render();
+}
+
+function render(){
+  const main=document.getElementById("mainContent");
+  if(STATE.page==="dashboard") return renderDashboard(main);
+  if(STATE.page==="rencana") return renderRencana(main);
+  if(STATE.page==="realisasi") return renderRealisasi(main);
+  if(STATE.page==="alatuji") return renderAlatUji(main);
+  if(STATE.page==="akun") return renderAkun(main);
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+async function renderDashboard(main){
+  main.innerHTML = `
+    <div class="grid-menu">
+      <button class="menu-card" onclick="goto('rencana')">
+        <div class="ic" style="background:#E8F1FA;">🗓️</div>
+        <h3>Rencana Kerja</h3><p>Input &amp; lihat rencana besok</p>
+      </button>
+      <button class="menu-card" onclick="goto('realisasi')">
+        <div class="ic" style="background:#e8f6ee;">✅</div>
+        <h3>Realisasi Kerja</h3><p>Update progres hari ini</p>
+      </button>
+      <button class="menu-card" onclick="goto('alatuji')">
+        <div class="ic" style="background:#fff4e0;">🧰</div>
+        <h3>Alat Uji</h3><p>Riwayat &amp; input alat uji</p>
+      </button>
+      <button class="menu-card" onclick="kirimWA('rencana')">
+        <div class="ic" style="background:#eafaf0;">📲</div>
+        <h3>Kirim ke WA</h3><p>Kirim rencana besok manual</p>
+      </button>
+    </div>
+    <div class="section-label">Ringkasan hari ini</div>
+    <div class="stat-row" id="statRow">
+      <div class="stat"><div class="loader"></div></div>
+    </div>
+  `;
+  try{
+    const rows = await getRencanaCached(fmtDMY(new Date()));
+    const total=rows.length;
+    const selesai=rows.filter(r=>r.Progres==="SELESAI").length;
+    const proses=rows.filter(r=>r.Progres==="PROSES").length;
+    document.getElementById("statRow").innerHTML = `
+      <div class="stat"><b>${total}</b><span>Total Kerja</span></div>
+      <div class="stat"><b>${proses}</b><span>Proses</span></div>
+      <div class="stat"><b>${selesai}</b><span>Selesai</span></div>
+    `;
+  }catch(e){
+    document.getElementById("statRow").innerHTML=`<div class="stat"><span>Gagal memuat data</span></div>`;
+  }
+}
+
+/* ============================================================
+   RENCANA KERJA
+   ============================================================ */
+async function getRencanaCached(tgl, force){
+  if(!force && STATE.rencanaCache[tgl]) return STATE.rencanaCache[tgl];
+  const rows = await apiGet("rencana",{tanggal:tgl});
+  STATE.rencanaCache[tgl]=rows;
+  return rows;
+}
+
+function renderRencana(main){
+  const tgl=STATE.tglRencana;
+  main.innerHTML = `
+    <div class="page-head"><h2>Rencana Kerja</h2></div>
+    <div class="datebar">
+      <button class="icon-btn" onclick="shiftTgl('rencana',-1)">‹</button>
+      <input type="date" id="dateRencana" value="${fmtISO(tgl)}">
+      <button class="icon-btn" onclick="shiftTgl('rencana',1)">›</button>
+      <button class="icon-btn" title="Kirim ke WA" onclick="kirimWA('rencana')">📲</button>
+    </div>
+    <div id="rencanaList"><div class="loader"></div></div>
+  `;
+  document.getElementById("dateRencana").addEventListener("change",e=>{
+    STATE.tglRencana=isoToDate(e.target.value); renderRencana(main);
+  });
+  loadRencanaList();
+}
+
+async function loadRencanaList(force){
+  const el=document.getElementById("rencanaList");
+  try{
+    const rows=await getRencanaCached(fmtDMY(STATE.tglRencana),force);
+    if(rows.length===0){
+      el.innerHTML=`<div class="empty-state"><div class="ic">🗒️</div>Belum ada rencana kerja<br>untuk tanggal ini</div>`;
+      return;
+    }
+    el.innerHTML = groupAndRenderCards(rows,"rencana");
+  }catch(e){ el.innerHTML=`<div class="empty-state">Gagal memuat data.<br>${esc(e.message)}</div>`; }
+}
+
+function groupAndRenderCards(rows, mode){
+  let html="";
+  UNIT_LIST.forEach(unit=>{
+    const items=rows.filter(r=>r.Unit===unit);
+    if(items.length===0) return;
+    html+=`<div class="section-label">${unit}</div>`;
+    items.forEach(r=> html+=workCard(r,mode));
+  });
+  const lain=rows.filter(r=>!UNIT_LIST.includes(r.Unit));
+  if(lain.length){ html+=`<div class="section-label">Lainnya</div>`; lain.forEach(r=>html+=workCard(r,mode)); }
+  return html;
+}
+
+function workCard(r, mode){
+  const padamClass = r.Status==="Padam" ? "padam":"";
+  const badgeStatus = r.Status==="Padam" ? `<span class="badge padam">PADAM</span>` : `<span class="badge tidak">TIDAK PADAM</span>`;
+  const progBadgeMap={SELESAI:"selesai",PROSES:"proses",BATAL:"batal"};
+  const progClass=progBadgeMap[r.Progres]||"belum";
+  const progLabel=r.Progres||"BELUM UPDATE";
+  return `
+    <div class="work-card ${padamClass}">
+      <div class="top">
+        <h4>${esc(r.Judul)}</h4>
+        ${mode==="rencana" ? badgeStatus : `<span class="badge ${progClass}">${esc(progLabel)}</span>`}
+      </div>
+      <div class="meta">
+        ${esc(r.Pihak)} · ${esc(r.JenisPekerjaan||"-")}<br>
+        PJ: ${esc(r.PJ||"-")} &nbsp;|&nbsp; PK3: ${esc(r.PK3||"-")} &nbsp;|&nbsp; PP: ${esc(r.PP||"-")}
+        ${r.LinkIzinKerja ? `<br><a href="${esc(r.LinkIzinKerja)}" target="_blank" rel="noopener">Lihat izin kerja (WP)</a>`:""}
+      </div>
+      <div class="actions">
+        ${mode==="rencana" ? `
+          <button onclick="openRencanaForm('${r.ID}')">✏️ Ubah</button>
+          <button onclick="hapusRencana('${r.ID}')">🗑️ Hapus</button>
+        ` : `
+          <button onclick="openProgresForm('${r.ID}','${esc(r.Progres||"")}','${esc(r.CatatanRealisasi||"")}')">🔄 Update Progres</button>
+        `}
+      </div>
+    </div>`;
+}
+
+function shiftTgl(which,n){
+  const key = which==="rencana"?"tglRencana":"tglRealisasi";
+  STATE[key]=addDays(STATE[key],n);
+  render();
+}
+
+async function hapusRencana(id){
+  if(!confirm("Hapus rencana kerja ini?")) return;
+  try{
+    await apiPost("deleteRencana",{id});
+    toast("Data dihapus");
+    await loadRencanaList(true);
+  }catch(e){ toast("Gagal: "+e.message); }
+}
+
+async function kirimWA(type){
+  const tgl = type==="rencana" ? fmtDMY(STATE.tglRencana) : fmtDMY(STATE.tglRealisasi);
+  if(!confirm(`Kirim laporan ${type==="rencana"?"rencana kerja":"realisasi kerja"} (${tgl}) ke grup WhatsApp sekarang?`)) return;
+  try{
+    await apiPost("sendWA",{type,tanggal:tgl});
+    toast("Terkirim ke WhatsApp ✅");
+  }catch(e){ toast("Gagal kirim: "+e.message); }
+}
+
+/* ---------- FORM RENCANA KERJA (sheet) ---------- */
+function openRencanaForm(id){
+  STATE.editingId=id||null;
+  const rows = STATE.rencanaCache[fmtDMY(STATE.tglRencana)]||[];
+  const data = id ? rows.find(r=>r.ID===id) : null;
+  const m = STATE.master||{};
+  const opt=(arr)=> (arr||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+
+  openSheet(`
+    <button class="close-x" onclick="closeSheet()">✕</button>
+    <div class="sheet-handle"></div>
+    <h2>${id?"Ubah":"Tambah"} Rencana Kerja</h2>
+    <div class="sub">Silakan lengkapi form berikut</div>
+
+    <div class="field"><label>Tanggal</label>
+      <input type="date" id="f_Tanggal" value="${fmtISO(STATE.tglRencana)}"></div>
+
+    <div class="field"><label>Unit Pelaksana / ULTG</label>
+      <select id="f_Unit">${opt(UNIT_LIST)}</select></div>
+
+    <div class="row2">
+      <div class="field"><label>Status</label>
+        <select id="f_Status"><option>Padam</option><option>Tidak Padam</option></select></div>
+      <div class="field"><label>Internal/Eksternal</label>
+        <select id="f_Pihak"><option>Internal</option><option>Eksternal</option></select></div>
+    </div>
+
+    <div class="field"><label>Terencana/Tidak Terencana</label>
+      <select id="f_Terencana">${opt(m.Terencana||["Terencana","Tidak Terencana"])}</select></div>
+
+    <div class="field"><label>Judul Pekerjaan</label>
+      <input type="text" id="f_Judul" placeholder="Input judul pekerjaan"></div>
+
+    <div class="field"><label>GI / Transmisi</label>
+      <div class="radio-group" id="f_JenisKonstruksi_group">
+        <div class="radio-opt" data-v="Gardu Induk">Gardu Induk</div>
+        <div class="radio-opt" data-v="Transmisi">Transmisi</div>
+      </div>
+      <input type="hidden" id="f_JenisKonstruksi" value="Gardu Induk">
+    </div>
+
+    <div class="field"><label>Jenis Pekerjaan</label>
+      <input type="text" id="f_JenisPekerjaan" list="dl_jenis" placeholder="Pilih / ketik jenis pekerjaan">
+      <datalist id="dl_jenis">${opt(m.JenisPekerjaan)}</datalist></div>
+
+    <div id="giFields">
+      <div class="field"><label>Lokasi GI</label>
+        <input type="text" id="f_LokasiGI" list="dl_gi" placeholder="Pilih / ketik lokasi GI">
+        <datalist id="dl_gi">${opt(m.LokasiGI)}</datalist></div>
+      <div class="field"><label>Bay</label>
+        <input type="text" id="f_Bay" list="dl_bay" placeholder="Pilih / ketik bay">
+        <datalist id="dl_bay">${opt(m.Bay)}</datalist></div>
+    </div>
+    <div id="suttFields" class="hidden">
+      <div class="field"><label>Lokasi SUTT/SUTET</label>
+        <input type="text" id="f_LokasiSUTT" list="dl_sutt" placeholder="Pilih / ketik lokasi SUTT">
+        <datalist id="dl_sutt">${opt(m.LokasiSUTT)}</datalist></div>
+    </div>
+
+    <div class="field"><label>Bekerja di Ketinggian</label>
+      <select id="f_Ketinggian"><option>Tidak</option><option>Ya</option></select></div>
+
+    <div class="field"><label>Link Izin Kerja (WP)</label>
+      <input type="text" id="f_LinkIzinKerja" placeholder="https://..."></div>
+
+    <div class="field"><label>Penanggung Jawab Pekerjaan</label>
+      <input type="text" id="f_PJ" placeholder="Nama penanggung jawab"></div>
+    <div class="field"><label>Pengawas K3</label>
+      <input type="text" id="f_PK3" placeholder="Nama pengawas K3"></div>
+    <div class="field"><label>Pengawas Pekerjaan</label>
+      <input type="text" id="f_PP" placeholder="Nama pengawas pekerjaan"></div>
+    <div class="field"><label>Jumlah Pelaksana</label>
+      <input type="number" id="f_JumlahPelaksana" placeholder="Jumlah personil"></div>
+
+    <div class="sheet-actions">
+      <button class="btn btn-outline" onclick="closeSheet()">Batal</button>
+      <button class="btn btn-primary" id="btnSaveRencana">Simpan</button>
+    </div>
+  `);
+
+  // Radio GI/Transmisi toggle
+  document.querySelectorAll("#f_JenisKonstruksi_group .radio-opt").forEach(el=>{
+    el.addEventListener("click",()=>{
+      document.querySelectorAll("#f_JenisKonstruksi_group .radio-opt").forEach(x=>x.classList.remove("sel"));
+      el.classList.add("sel");
+      document.getElementById("f_JenisKonstruksi").value=el.dataset.v;
+      document.getElementById("giFields").classList.toggle("hidden", el.dataset.v!=="Gardu Induk");
+      document.getElementById("suttFields").classList.toggle("hidden", el.dataset.v!=="Transmisi");
+    });
+  });
+  document.querySelector("#f_JenisKonstruksi_group .radio-opt").classList.add("sel");
+
+  if(data){
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||""; };
+    set("f_Unit",data.Unit); set("f_Status",data.Status); set("f_Pihak",data.Pihak);
+    set("f_Terencana",data.Terencana); set("f_Judul",data.Judul); set("f_JenisPekerjaan",data.JenisPekerjaan);
+    set("f_LokasiGI",data.LokasiGI); set("f_Bay",data.Bay); set("f_LokasiSUTT",data.LokasiSUTT);
+    set("f_Ketinggian",data.Ketinggian); set("f_LinkIzinKerja",data.LinkIzinKerja);
+    set("f_PJ",data.PJ); set("f_PK3",data.PK3); set("f_PP",data.PP); set("f_JumlahPelaksana",data.JumlahPelaksana);
+    if(data.JenisKonstruksi){
+      document.getElementById("f_JenisKonstruksi").value=data.JenisKonstruksi;
+      document.querySelectorAll("#f_JenisKonstruksi_group .radio-opt").forEach(x=>{
+        x.classList.toggle("sel", x.dataset.v===data.JenisKonstruksi);
+      });
+      document.getElementById("giFields").classList.toggle("hidden", data.JenisKonstruksi!=="Gardu Induk");
+      document.getElementById("suttFields").classList.toggle("hidden", data.JenisKonstruksi!=="Transmisi");
+    }
+  }
+
+  document.getElementById("btnSaveRencana").addEventListener("click", saveRencana);
+}
+
+async function saveRencana(){
+  const g=id=>document.getElementById(id).value.trim();
+  const tglDate = isoToDate(g("f_Tanggal"));
+  const payload = {
+    Tanggal: fmtDMY(tglDate), Unit:g("f_Unit"), Pihak:g("f_Pihak"), Status:g("f_Status"),
+    Terencana:g("f_Terencana"), LinkIzinKerja:g("f_LinkIzinKerja"), Judul:g("f_Judul"),
+    JenisKonstruksi:g("f_JenisKonstruksi"), JenisPekerjaan:g("f_JenisPekerjaan"),
+    LokasiGI:g("f_LokasiGI"), Bay:g("f_Bay"), LokasiSUTT:g("f_LokasiSUTT"), Ketinggian:g("f_Ketinggian"),
+    PJ:g("f_PJ"), PK3:g("f_PK3"), PP:g("f_PP"), JumlahPelaksana:g("f_JumlahPelaksana")
+  };
+  if(!payload.Judul){ toast("Judul pekerjaan wajib diisi"); return; }
+  const btn=document.getElementById("btnSaveRencana");
+  btn.disabled=true; btn.textContent="Menyimpan...";
+  try{
+    if(STATE.editingId){ await apiPost("updateRencana",{id:STATE.editingId,data:payload}); }
+    else{ await apiPost("addRencana",{data:payload}); }
+    toast("Rencana kerja tersimpan ✅");
+    closeSheet();
+    STATE.tglRencana=tglDate;
+    await loadRencanaList(true);
+    renderRencana(document.getElementById("mainContent"));
+  }catch(e){ toast("Gagal simpan: "+e.message); }
+  finally{ btn.disabled=false; btn.textContent="Simpan"; }
+}
+
+/* ============================================================
+   REALISASI KERJA
+   ============================================================ */
+function renderRealisasi(main){
+  const tgl=STATE.tglRealisasi;
+  main.innerHTML=`
+    <div class="page-head"><h2>Realisasi Kerja</h2></div>
+    <div class="datebar">
+      <button class="icon-btn" onclick="shiftTgl('realisasi',-1)">‹</button>
+      <input type="date" id="dateRealisasi" value="${fmtISO(tgl)}">
+      <button class="icon-btn" onclick="shiftTgl('realisasi',1)">›</button>
+      <button class="icon-btn" title="Kirim ke WA" onclick="kirimWA('realisasi')">📲</button>
+    </div>
+    <div id="realisasiList"><div class="loader"></div></div>
+  `;
+  document.getElementById("dateRealisasi").addEventListener("change",e=>{
+    STATE.tglRealisasi=isoToDate(e.target.value); renderRealisasi(main);
+  });
+  loadRealisasiList();
+}
+
+async function loadRealisasiList(force){
+  const el=document.getElementById("realisasiList");
+  try{
+    const rows=await getRencanaCached(fmtDMY(STATE.tglRealisasi),force);
+    if(rows.length===0){ el.innerHTML=`<div class="empty-state"><div class="ic">✅</div>Tidak ada pekerjaan<br>pada tanggal ini</div>`; return; }
+    el.innerHTML = groupAndRenderCards(rows,"realisasi");
+  }catch(e){ el.innerHTML=`<div class="empty-state">Gagal memuat data.<br>${esc(e.message)}</div>`; }
+}
+
+function openProgresForm(id, current, catatan){
+  const opsi=["BELUM UPDATE","PROSES","SELESAI","BATAL"];
+  openSheet(`
+    <button class="close-x" onclick="closeSheet()">✕</button>
+    <div class="sheet-handle"></div>
+    <h2>Update Progres</h2>
+    <div class="sub">Pilih status realisasi pekerjaan</div>
+    <div class="field"><label>Status Progres</label>
+      <div class="radio-group" id="progresGroup" style="flex-wrap:wrap;">
+        ${opsi.map(o=>`<div class="radio-opt ${o===current?'sel':''}" data-v="${o}" style="flex:1 1 45%;margin-bottom:8px;">${o}</div>`).join("")}
+      </div>
+      <input type="hidden" id="f_progres" value="${esc(current||'BELUM UPDATE')}">
+    </div>
+    <div class="field"><label>Catatan (opsional)</label>
+      <textarea id="f_catatan" rows="3" placeholder="Catatan realisasi...">${esc(catatan||"")}</textarea></div>
+    <div class="sheet-actions">
+      <button class="btn btn-outline" onclick="closeSheet()">Batal</button>
+      <button class="btn btn-primary" id="btnSaveProgres">Simpan</button>
+    </div>
+  `);
+  document.querySelectorAll("#progresGroup .radio-opt").forEach(el=>{
+    el.addEventListener("click",()=>{
+      document.querySelectorAll("#progresGroup .radio-opt").forEach(x=>x.classList.remove("sel"));
+      el.classList.add("sel");
+      document.getElementById("f_progres").value=el.dataset.v;
+    });
+  });
+  document.getElementById("btnSaveProgres").addEventListener("click",async()=>{
+    const btn=document.getElementById("btnSaveProgres");
+    btn.disabled=true; btn.textContent="Menyimpan...";
+    try{
+      await apiPost("updateProgres",{id, progres:document.getElementById("f_progres").value, catatan:document.getElementById("f_catatan").value});
+      toast("Progres diperbarui ✅");
+      closeSheet();
+      await loadRealisasiList(true);
+    }catch(e){ toast("Gagal: "+e.message); }
+    finally{ btn.disabled=false; btn.textContent="Simpan"; }
+  });
+}
+
+/* ============================================================
+   ALAT UJI
+   ============================================================ */
+function renderAlatUji(main){
+  main.innerHTML=`
+    <div class="page-head"><h2>Riwayat Alat Uji</h2></div>
+    <div class="search-bar">
+      <span>🔍</span>
+      <input type="text" id="alatujiSearch" placeholder="Cari serial, nama alat, PIC, lokasi...">
+    </div>
+    <div id="alatujiList"><div class="loader"></div></div>
+  `;
+  let timer;
+  document.getElementById("alatujiSearch").addEventListener("input",e=>{
+    clearTimeout(timer);
+    timer=setTimeout(()=>loadAlatUjiList(e.target.value),350);
+  });
+  loadAlatUjiList();
+}
+
+async function loadAlatUjiList(q){
+  const el=document.getElementById("alatujiList");
+  try{
+    const rows=await apiGet("alatuji",{q:q||""});
+    STATE.alatujiCache=rows;
+    if(rows.length===0){ el.innerHTML=`<div class="empty-state"><div class="ic">🧰</div>Belum ada data alat uji</div>`; return; }
+    el.innerHTML = rows.map(alatCard).join("");
+  }catch(e){ el.innerHTML=`<div class="empty-state">Gagal memuat data.<br>${esc(e.message)}</div>`; }
+}
+
+function alatCard(r){
+  const kondisiBadge = r.Kondisi==="Baik" ? `<span class="badge tidak">BAIK</span>` : `<span class="badge padam">RUSAK</span>`;
+  const mapsLink = (r.Latitude && r.Longitude) ? `<br><a href="https://maps.google.com/?q=${r.Latitude},${r.Longitude}" target="_blank" rel="noopener">📍 Lihat lokasi di peta</a>` : "";
+  const foto = r.FotoURL ? r.FotoURL.split(" | ").map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">Foto</a>`).join(" · ") : "";
+  return `
+    <div class="work-card">
+      <div class="top"><h4>${esc(r.NamaAlat)} — ${esc(r.Serial)}</h4>${kondisiBadge}</div>
+      <div class="meta">
+        Merk/Tipe: ${esc(r.Merk||"-")} / ${esc(r.Tipe||"-")}<br>
+        Tanggal: ${esc(r.Tanggal||"-")} · PIC: ${esc(r.PIC||"-")}<br>
+        Lokasi: ${esc(r.Lokasi||"-")} · Kelengkapan: ${esc(r.Kelengkapan||"-")} · Bersih: ${esc(r.Bersih||"-")}
+        ${r.Keterangan ? `<br>Ket: ${esc(r.Keterangan)}`:""}
+        ${foto ? `<br>${foto}`:""}
+        ${mapsLink}
+      </div>
+      <div class="actions">
+        <button onclick="openAlatUjiForm('${r.ID}')">✏️ Ubah</button>
+        <button onclick="hapusAlatUji('${r.ID}')">🗑️ Hapus</button>
+      </div>
+    </div>`;
+}
+
+async function hapusAlatUji(id){
+  if(!confirm("Hapus data alat uji ini?")) return;
+  try{ await apiPost("deleteAlatUji",{id}); toast("Data dihapus"); await loadAlatUjiList(); }
+  catch(e){ toast("Gagal: "+e.message); }
+}
+
+let pendingPhotos=[null,null];
+
+function openAlatUjiForm(id){
+  STATE.editingId=id||null;
+  pendingPhotos=[null,null];
+  const data = id ? (STATE.alatujiCache||[]).find(r=>r.ID===id) : null;
+  const m=STATE.master||{};
+  const opt=(arr)=> (arr||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+
+  openSheet(`
+    <button class="close-x" onclick="closeSheet()">✕</button>
+    <div class="sheet-handle"></div>
+    <h2>${id?"Ubah":"Input"} Alat Uji</h2>
+    <div class="sub">Silakan lengkapi form berikut</div>
+
+    <div class="field"><label>No. Identifikasi / Serial</label>
+      <input type="text" id="a_Serial" placeholder="Nomor seri alat"></div>
+    <div class="field"><label>Nama Alat Uji</label>
+      <input type="text" id="a_NamaAlat" list="dl_alat" placeholder="Nama alat uji">
+      <datalist id="dl_alat">${opt(m.NamaAlatUji)}</datalist></div>
+    <div class="row2">
+      <div class="field"><label>Merk</label><input type="text" id="a_Merk"></div>
+      <div class="field"><label>Tipe</label><input type="text" id="a_Tipe"></div>
+    </div>
+    <div class="field"><label>Tanggal</label><input type="date" id="a_Tanggal" value="${fmtISO(new Date())}"></div>
+    <div class="field"><label>PIC</label><input type="text" id="a_PIC" placeholder="Nama PIC"></div>
+    <div class="field"><label>Lokasi</label>
+      <input type="text" id="a_Lokasi" list="dl_lokasi" placeholder="Lokasi alat">
+      <datalist id="dl_lokasi">${opt(m.LokasiAlatUji)}</datalist>
+      <button type="button" class="btn btn-outline" style="margin-top:8px;" onclick="ambilLokasi()">📍 Ambil Lokasi GPS Saat Ini</button>
+      <input type="hidden" id="a_Lat" value="${data?data.Latitude||"":""}">
+      <input type="hidden" id="a_Lng" value="${data?data.Longitude||"":""}">
+      <div id="gpsStatus" style="font-size:11.5px;color:var(--teks-lemah);margin-top:6px;">${data&&data.Latitude?`Lokasi tersimpan: ${data.Latitude}, ${data.Longitude}`:""}</div>
+    </div>
+
+    <div class="field"><label>Kelengkapan</label>
+      <div class="radio-group" id="a_kelengkapan_group">
+        <div class="radio-opt" data-v="Lengkap">Lengkap</div>
+        <div class="radio-opt" data-v="Tidak Lengkap">Tidak Lengkap</div>
+      </div></div>
+    <div class="field"><label>Kondisi</label>
+      <div class="radio-group" id="a_kondisi_group">
+        <div class="radio-opt" data-v="Baik">Baik</div>
+        <div class="radio-opt" data-v="Rusak">Rusak</div>
+      </div></div>
+    <div class="field"><label>Pembersihan Alat</label>
+      <div class="radio-group" id="a_bersih_group">
+        <div class="radio-opt" data-v="Sudah">Sudah</div>
+        <div class="radio-opt" data-v="Belum">Belum</div>
+      </div></div>
+
+    <div class="field"><label>Keterangan</label>
+      <textarea id="a_Keterangan" rows="2" placeholder="Sebutkan kondisi jika ada kehilangan/rusak"></textarea></div>
+
+    <div class="field"><label>Foto (opsional, maks 2)</label>
+      <div class="photo-row">
+        <label class="photo-slot" id="photoSlot0"><span>📷</span>Ambil/Pilih Foto<input type="file" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event,0)"></label>
+        <label class="photo-slot" id="photoSlot1"><span>📷</span>Ambil/Pilih Foto<input type="file" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event,1)"></label>
+      </div>
+    </div>
+
+    <div class="sheet-actions">
+      <button class="btn btn-outline" onclick="closeSheet()">Batal</button>
+      <button class="btn btn-primary" id="btnSaveAlatUji">Simpan</button>
+    </div>
+  `);
+
+  ["kelengkapan","kondisi","bersih"].forEach(k=>{
+    document.querySelectorAll(`#a_${k}_group .radio-opt`).forEach(el=>{
+      el.addEventListener("click",()=>{
+        document.querySelectorAll(`#a_${k}_group .radio-opt`).forEach(x=>x.classList.remove("sel"));
+        el.classList.add("sel");
+      });
+    });
+  });
+
+  if(data){
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||""; };
+    set("a_Serial",data.Serial); set("a_NamaAlat",data.NamaAlat); set("a_Merk",data.Merk); set("a_Tipe",data.Tipe);
+    set("a_PIC",data.PIC); set("a_Lokasi",data.Lokasi); set("a_Keterangan",data.Keterangan);
+    if(data.Tanggal){ /* Tanggal dari server format dd/MM/yyyy, konversi ke ISO jika perlu */ }
+    ["Kelengkapan","Kondisi","Bersih"].forEach(k=>{
+      const key=k.toLowerCase();
+      document.querySelectorAll(`#a_${key}_group .radio-opt`).forEach(x=>x.classList.toggle("sel", x.dataset.v===data[k]));
+    });
+  }
+}
+
+function ambilLokasi(){
+  const status=document.getElementById("gpsStatus");
+  status.textContent="Mengambil lokasi...";
+  if(!navigator.geolocation){ status.textContent="Geolocation tidak didukung browser ini."; return; }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById("a_Lat").value=pos.coords.latitude;
+    document.getElementById("a_Lng").value=pos.coords.longitude;
+    status.textContent=`Lokasi tersimpan: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+  },err=>{ status.textContent="Gagal mengambil lokasi: "+err.message; },{enableHighAccuracy:true,timeout:10000});
+}
+
+function handlePhoto(e,idx){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    pendingPhotos[idx]={filename:file.name, mimeType:file.type, base64:reader.result.split(",")[1]};
+    document.getElementById(`photoSlot${idx}`).innerHTML=`<img src="${reader.result}">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.addEventListener("click",e=>{
+  if(e.target.id==="btnSaveAlatUji") saveAlatUji();
+});
+
+async function saveAlatUji(){
+  const g=id=>document.getElementById(id).value.trim();
+  const sel=id=>{ const el=document.querySelector(`#${id} .radio-opt.sel`); return el?el.dataset.v:""; };
+  const payload={
+    Serial:g("a_Serial"), NamaAlat:g("a_NamaAlat"), Merk:g("a_Merk"), Tipe:g("a_Tipe"),
+    Tanggal: (()=>{ const v=g("a_Tanggal"); return v? fmtDMY(isoToDate(v)) : ""; })(),
+    PIC:g("a_PIC"), Lokasi:g("a_Lokasi"), Latitude:g("a_Lat"), Longitude:g("a_Lng"),
+    Kelengkapan:sel("a_kelengkapan_group"), Kondisi:sel("a_kondisi_group"), Bersih:sel("a_bersih_group"),
+    Keterangan:g("a_Keterangan")
+  };
+  if(!payload.NamaAlat){ toast("Nama alat uji wajib diisi"); return; }
+  const fotos=pendingPhotos.filter(Boolean);
+  const btn=document.getElementById("btnSaveAlatUji");
+  btn.disabled=true; btn.textContent="Menyimpan...";
+  try{
+    if(STATE.editingId){ await apiPost("updateAlatUji",{id:STATE.editingId,data:payload,fotos}); }
+    else{ await apiPost("addAlatUji",{data:payload,fotos}); }
+    toast("Data alat uji tersimpan ✅");
+    closeSheet();
+    await loadAlatUjiList();
+  }catch(e){ toast("Gagal simpan: "+e.message); }
+  finally{ btn.disabled=false; btn.textContent="Simpan"; }
+}
+
+/* ============================================================
+   AKUN
+   ============================================================ */
+function renderAkun(main){
+  main.innerHTML=`
+    <div class="page-head"><h2>Akun</h2></div>
+    <div class="work-card" style="border-left-color:var(--amber);">
+      <h4>${esc(STATE.nama)}</h4>
+      <div class="meta">Peran: ${esc(STATE.role||"user")}</div>
+    </div>
+    <button class="btn btn-danger" style="margin-top:14px;" onclick="doLogout()">Keluar</button>
+  `;
+}
+
+/* ============================================================
+   SHEET (bottom modal) HELPERS
+   ============================================================ */
+function openSheet(html){
+  document.getElementById("sheetContent").innerHTML=html;
+  document.getElementById("sheetOverlay").classList.add("open");
+}
+function closeSheet(){ document.getElementById("sheetOverlay").classList.remove("open"); }
+document.getElementById("sheetOverlay").addEventListener("click",e=>{ if(e.target.id==="sheetOverlay") closeSheet(); });
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+if(STATE.token){ enterApp(); } else { document.getElementById("loginScreen").style.display="flex"; }
+window.goto=goto; window.openRencanaForm=openRencanaForm; window.hapusRencana=hapusRencana;
+window.shiftTgl=shiftTgl; window.kirimWA=kirimWA; window.openProgresForm=openProgresForm;
+window.openAlatUjiForm=openAlatUjiForm; window.hapusAlatUji=hapusAlatUji; window.ambilLokasi=ambilLokasi;
+window.handlePhoto=handlePhoto; window.closeSheet=closeSheet; window.doLogout=doLogout;
+</script>
+</body>
+</html>

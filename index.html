@@ -52,7 +52,7 @@
   header.topbar h1{font-size:18px;}
   header.topbar .sub{font-size:12px;opacity:.85;margin-top:2px;}
   .avatar{width:38px;height:38px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
-  main{flex:1;padding:0 16px 90px;margin-top:-28px;}
+  main{flex:1;padding:0 16px 90px;margin-top:-20px;}
 
   /* ---------- DASHBOARD ---------- */
   .grid-menu{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px;}
@@ -72,7 +72,7 @@
   nav.bottomnav .ic{font-size:19px;}
 
   /* ---------- PAGE HEADER ---------- */
-  .page-head{display:flex;align-items:center;gap:10px;padding-top:16px;margin-bottom:10px;}
+  .page-head{display:flex;align-items:center;gap:10px;padding-top:38px;margin-bottom:10px;position:relative;z-index:2;}
   .page-head h2{font-size:17px;color:var(--biru-tua);}
   .back-btn{background:#fff;border:1px solid var(--garis);width:34px;height:34px;border-radius:10px;font-size:16px;}
 
@@ -186,15 +186,96 @@
   <div class="sheet" id="sheetContent" style="position:relative;"></div>
 </div>
 
+<!-- ============================= SCANNER BARCODE (Alat Uji) ============================= -->
+<div class="sheet-overlay" id="scannerOverlay" style="z-index:70;">
+  <div class="sheet" style="max-height:82vh;position:relative;">
+    <button class="close-x" onclick="closeScanner()">✕</button>
+    <div class="sheet-handle"></div>
+    <h2>Scan Barcode Alat Uji</h2>
+    <div class="sub">Arahkan kamera ke barcode/QR pada label alat</div>
+    <div id="qrReader" style="width:100%;border-radius:12px;overflow:hidden;margin-top:4px;background:#000;"></div>
+    <div id="qrStatus" style="text-align:center;font-size:12.5px;color:var(--teks-lemah);margin-top:10px;">Menyalakan kamera...</div>
+    <button class="btn btn-outline" style="margin-top:14px;" onclick="closeScanner()">Tutup</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 /* ============================================================
    KONFIGURASI — ganti dengan URL Web App Apps Script Anda
    ============================================================ */
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbwVuNPI4HuerCAYhLvGJHO34t0tUjnPkqWVWaOGV2qwRWrdOrFGMzxX6yNmzEszoEYCXA/exec"
+  API_URL: "https://script.google.com/macros/s/AKfycbwccWNn17CtjC1kf-3zYwpYAOdpJK5fL-xPIsgy93IIFPsuWI58YgbHrhItxvAc4KAhAQ/exec"
 };
+
+/* Daftar tetap Jenis Pekerjaan (sesuai permintaan, tidak perlu ke server) */
+const JENIS_PEKERJAAN_LIST = [
+  "Pemeliharaan Penghantar Bay",
+  "Pemeliharaan Trafo Bay",
+  "Pemeliharaan SUTT / SUTET / SKTT",
+  "Pengoperasian Gardu Induk",
+  "Pemeliharaan RoW",
+  "Lain - Lain"
+];
+
+/* Daftar tetap Segmen SUTT/SUTET (sesuai permintaan, tidak perlu ke server / sheet DataSUTT) */
+const DATASUTT_LIST = [
+  "Tebing Tinggi - Kuala Tanjung 1. 150kV",
+  "Tebing Tinggi - Kuala Tanjung 2. 150kV",
+  "Kuala Tanjung - KEK Sei Mangke 1. 150 kV",
+  "Kuala Tanjung - KEK Sei Mangke 2. 150 kV",
+  "KEK Sei Mangke - Kisaran 1. 150 kV",
+  "KEK Sei Mangke - Kisaran 2. 150 kV",
+  "Incomer - KEK Sei Mangke",
+  "Kisaran - Rantau Prapat 150kV",
+  "Incomer Hasang1. Hasang - Rantau Prapat2.", // CATATAN: baris ini tampak tergabung saat disalin dari sumber aslinya, mohon dicek & disesuaikan manual jika perlu
+  "Hasang - Aek Kanopan",
+  "Kisaran - Aek Kanopan 150kV",
+  "Hasang - Rantau Prapat 150 kV",
+  "Rantau Prapat - Kota Pinang 1. 150kV",
+  "Rantau Prapat - Kota Pinang 2. 150kV",
+  "Labuhan Bilik - Rantau Prapat 1. 150kV",
+  "Labuhan Bilik - Rantau Prapat 2. 150kV",
+  "Kisaran - Tanjung Balai 1. 150 kV",
+  "Kisaran - Tanjung Balai 2. 150 kV",
+  "Rantau Prapat - Padang Sidempuan 150kV",
+  "Rantau Prapat - Gunung Tua 150 kV",
+  "Gunung Tua - Padang Sidempuan 150kV",
+  "Inc. Gunung Tua - GI Gunung Tua 150 kV",
+  "Sibolga - Martabe 1. 150kV",
+  "Sibolga - Martabe 2. 150kV",
+  "Martabe - Padang Sidempuan 1. 150kV",
+  "Martabe - Padang Sidempuan 2. 150kV",
+  "Sibolga - Labuhan Angin 1. 150kV",
+  "Sibolga - Labuhan Angin 2. 150kV",
+  "Sipan Sihaporas 1 - Sibolga 150kV",
+  "Sipan Sihaporas 2 - Sibolga 150kV",
+  "Sipan Sihaporas 1 - Sipan Sihaporas 2. 150 kV",
+  "Sipan Sihaporas 2 - Incomer 150kV",
+  "Sarula (Sumut IV) - New Padang Sidempuan 1. 275 kV",
+  "Sarula (Sumut IV) - New Padang Sidempuan 2. 275 kV",
+  "New Padang Sidempuan - Padang Sidempuan 1. 150 kV",
+  "New Padang Sidempuan - Padang Sidempuan 2. 150 kV",
+  "Payakumbuh - New Sidempuan 1 275kV",
+  "Payakumbuh - New Sidempuan 2 275kV",
+  "Panyabungan - New Padang Sidempuan 1 150kV",
+  "Panyabungan - New Padang Sidempuan 2 150kV",
+  "Gunung Tua - Sibuhuan 1 150 kV",
+  "Gunung Tua - Sibuhuan 2 150 kV",
+  "Panyabungan - SMGP 1 150kV",
+  "Panyabungan - SMGP 2 150kV"
+];
+
+/* Daftar tetap Lokasi GI untuk form Alat Uji (sesuai permintaan) */
+const ALATUJI_LOKASI_LIST = [
+  "GI 150KV SIBOLGA","GI 150KV LABUHAN ANGIN","GI 150KV PADANG SIDEMPUAN","GI 150KV GUNUNG TUA",
+  "PLTA 150KV SIPAN 1","PLTA 150KV SIPAN 2","GITET 275KV NEW PADANG SIDEMPUAN","GI 150KV NEW PADANG SIDEMPUAN",
+  "GI 150KV SIBUHUAN","GI 150KV PANYABUNGAN","GI 150KV KISARAN","GI 150KV KUALA TANJUNG",
+  "GI 150KV RANTAU PRAPAT","GI 150KV AEK KANOPAN","GI 150KV SIMANGKE","GI 150KV TANJUNG BALAI",
+  "GI 150KV KOTA PINANG","GITET 275KV KUALA TANJUNG","GI 150KV MARTABE"
+];
 
 /* ============================================================
    STATE
@@ -204,12 +285,14 @@ let STATE = {
   nama: localStorage.getItem("sl_nama") || "",
   role: localStorage.getItem("sl_role") || "",
   master: null,
+  masterPromise: null,
   page: "dashboard",
   tglRencana: addDays(new Date(), 1),
   tglRealisasi: new Date(),
   rencanaCache: {},
   alatujiCache: null,
-  editingId: null
+  editingId: null,
+  rekapMode: "gi"
 };
 
 const UNIT_LIST = ["ULTG KISARAN","ULTG PADANG SIDEMPUAN","PDKB RING","PDKB GI"];
@@ -236,6 +319,16 @@ function toast(msg){
   setTimeout(()=>t.classList.remove("show"),2400);
 }
 function esc(s){ return (s===undefined||s===null)?"":s.toString().replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+// Ambil nilai dari <select>; jika user memilih "Lainnya (ketik manual)" ("__lain__"),
+// ambil nilai dari input manual di sebelahnya. Dipakai di form Rencana Kerja & Alat Uji.
+function resolveSelect(selId, manualId){
+  const selEl=document.getElementById(selId);
+  const v = selEl ? selEl.value.trim() : "";
+  if(v!=="__lain__") return v;
+  const manualEl=document.getElementById(manualId);
+  return manualEl ? manualEl.value.trim() : "";
+}
 
 /* ============================================================
    API — GET (tanpa preflight) & POST (text/plain agar tanpa preflight)
@@ -303,8 +396,12 @@ async function enterApp(){
   document.getElementById("app").classList.remove("hidden");
   document.getElementById("avatarInitial").textContent=(STATE.nama||"?").charAt(0).toUpperCase();
   document.getElementById("todayLabel").textContent=displayTgl(new Date());
-  try{ STATE.master=await apiGet("masterdata"); }catch(e){ STATE.master={}; }
+  // Render dashboard SEGERA tanpa menunggu masterdata (agar terasa lebih cepat).
+  // Masterdata (untuk dropdown form) dimuat di latar belakang & di-cache di server.
   goto("dashboard");
+  STATE.masterPromise = apiGet("masterdata")
+    .then(m=>{ STATE.master=m||{}; return STATE.master; })
+    .catch(()=>{ STATE.master={}; return STATE.master; });
 }
 
 /* ============================================================
@@ -333,6 +430,7 @@ function render(){
   if(STATE.page==="realisasi") return renderRealisasi(main);
   if(STATE.page==="alatuji") return renderAlatUji(main);
   if(STATE.page==="akun") return renderAkun(main);
+  if(STATE.page==="rekap") return renderRekap(main);
 }
 
 /* ============================================================
@@ -356,6 +454,10 @@ async function renderDashboard(main){
       <button class="menu-card" onclick="kirimWA('rencana')">
         <div class="ic" style="background:#eafaf0;">📲</div>
         <h3>Kirim ke WA</h3><p>Kirim rencana besok manual</p>
+      </button>
+      <button class="menu-card" onclick="goto('rekap')">
+        <div class="ic" style="background:#f3e8fd;">📊</div>
+        <h3>Rekap Pekerjaan</h3><p>Rekap per GI/Bay &amp; SUTT</p>
       </button>
     </div>
     <div class="section-label">Ringkasan hari ini</div>
@@ -484,12 +586,24 @@ async function kirimWA(type){
 }
 
 /* ---------- FORM RENCANA KERJA (sheet) ---------- */
-function openRencanaForm(id){
+async function openRencanaForm(id){
   STATE.editingId=id||null;
+  // Tampilkan loading dulu supaya form terasa responsif walau masterdata masih dimuat
+  openSheet(`
+    <div class="sheet-handle"></div>
+    <div style="padding:36px 0;text-align:center;">
+      <div class="loader"></div>
+      <div style="margin-top:10px;color:var(--teks-lemah);font-size:13px;">Memuat form...</div>
+    </div>
+  `);
+  if(STATE.masterPromise) await STATE.masterPromise;
+
   const rows = STATE.rencanaCache[fmtDMY(STATE.tglRencana)]||[];
   const data = id ? rows.find(r=>r.ID===id) : null;
   const m = STATE.master||{};
+  const giList = Object.keys(m.giBayMap||{}).sort();
   const opt=(arr)=> (arr||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+  const optJenis=(arr)=> (arr||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
 
   openSheet(`
     <button class="close-x" onclick="closeSheet()">✕</button>
@@ -525,21 +639,34 @@ function openRencanaForm(id){
     </div>
 
     <div class="field"><label>Jenis Pekerjaan</label>
-      <input type="text" id="f_JenisPekerjaan" list="dl_jenis" placeholder="Pilih / ketik jenis pekerjaan">
-      <datalist id="dl_jenis">${opt(m.JenisPekerjaan)}</datalist></div>
+      <select id="f_JenisPekerjaan">
+        <option value="">Pilih jenis pekerjaan</option>
+        ${optJenis(JENIS_PEKERJAAN_LIST)}
+      </select></div>
 
     <div id="giFields">
       <div class="field"><label>Lokasi GI</label>
-        <input type="text" id="f_LokasiGI" list="dl_gi" placeholder="Pilih / ketik lokasi GI">
-        <datalist id="dl_gi">${opt(m.LokasiGI)}</datalist></div>
+        <select id="f_LokasiGI" onchange="onLokasiGIChange()">
+          <option value="">Pilih lokasi GI</option>
+          ${opt(giList)}
+          <option value="__lain__">Lainnya (ketik manual)</option>
+        </select>
+        <input type="text" id="f_LokasiGI_manual" placeholder="Ketik lokasi GI" style="margin-top:8px;display:none;">
+      </div>
       <div class="field"><label>Bay</label>
-        <input type="text" id="f_Bay" list="dl_bay" placeholder="Pilih / ketik bay">
-        <datalist id="dl_bay">${opt(m.Bay)}</datalist></div>
+        <select id="f_Bay"><option value="">Pilih lokasi GI dahulu</option></select>
+        <input type="text" id="f_Bay_manual" placeholder="Ketik nama bay" style="margin-top:8px;display:none;">
+      </div>
     </div>
     <div id="suttFields" class="hidden">
       <div class="field"><label>Lokasi SUTT/SUTET</label>
-        <input type="text" id="f_LokasiSUTT" list="dl_sutt" placeholder="Pilih / ketik lokasi SUTT">
-        <datalist id="dl_sutt">${opt(m.LokasiSUTT)}</datalist></div>
+        <select id="f_LokasiSUTT" onchange="onLokasiSUTTChange()">
+          <option value="">Pilih segmen SUTT/SUTET</option>
+          ${opt(DATASUTT_LIST)}
+          <option value="__lain__">Lainnya (ketik manual)</option>
+        </select>
+        <input type="text" id="f_LokasiSUTT_manual" placeholder="Ketik lokasi SUTT" style="margin-top:8px;display:none;">
+      </div>
     </div>
 
     <div class="field"><label>Bekerja di Ketinggian</label>
@@ -575,11 +702,42 @@ function openRencanaForm(id){
   });
   document.querySelector("#f_JenisKonstruksi_group .radio-opt").classList.add("sel");
 
+  // Inisialisasi pilihan Bay kosong dulu (akan diisi ulang di bawah jika sedang edit data)
+  populateBayOptions("");
+
   if(data){
     const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||""; };
     set("f_Unit",data.Unit); set("f_Status",data.Status); set("f_Pihak",data.Pihak);
     set("f_Terencana",data.Terencana); set("f_Judul",data.Judul); set("f_JenisPekerjaan",data.JenisPekerjaan);
-    set("f_LokasiGI",data.LokasiGI); set("f_Bay",data.Bay); set("f_LokasiSUTT",data.LokasiSUTT);
+
+    // Lokasi GI (dengan fallback manual jika tidak ada di daftar)
+    if(data.LokasiGI){
+      const giSelect=document.getElementById("f_LokasiGI");
+      const giAda = Array.from(giSelect.options).some(o=>o.value===data.LokasiGI);
+      if(giAda){
+        giSelect.value=data.LokasiGI;
+        populateBayOptions(data.LokasiGI, data.Bay);
+      }else{
+        giSelect.value="__lain__";
+        document.getElementById("f_LokasiGI_manual").style.display="block";
+        document.getElementById("f_LokasiGI_manual").value=data.LokasiGI;
+        populateBayOptions("", data.Bay);
+      }
+    }
+
+    // Lokasi SUTT (dengan fallback manual jika tidak ada di daftar)
+    if(data.LokasiSUTT){
+      const suttSelect=document.getElementById("f_LokasiSUTT");
+      const suttAda = Array.from(suttSelect.options).some(o=>o.value===data.LokasiSUTT);
+      if(suttAda){
+        suttSelect.value=data.LokasiSUTT;
+      }else{
+        suttSelect.value="__lain__";
+        document.getElementById("f_LokasiSUTT_manual").style.display="block";
+        document.getElementById("f_LokasiSUTT_manual").value=data.LokasiSUTT;
+      }
+    }
+
     set("f_Ketinggian",data.Ketinggian); set("f_LinkIzinKerja",data.LinkIzinKerja);
     set("f_PJ",data.PJ); set("f_PK3",data.PK3); set("f_PP",data.PP); set("f_JumlahPelaksana",data.JumlahPelaksana);
     if(data.JenisKonstruksi){
@@ -595,17 +753,85 @@ function openRencanaForm(id){
   document.getElementById("btnSaveRencana").addEventListener("click", saveRencana);
 }
 
+function onLokasiGIChange(){
+  const gi=document.getElementById("f_LokasiGI").value;
+  document.getElementById("f_LokasiGI_manual").style.display = gi==="__lain__" ? "block":"none";
+  populateBayOptions(gi==="__lain__" ? "" : gi);
+}
+
+function populateBayOptions(gi, selectedBay){
+  const m=STATE.master||{};
+  const bays=(m.giBayMap && m.giBayMap[gi]) || [];
+  const sel=document.getElementById("f_Bay");
+  if(!sel) return;
+  sel.innerHTML = `<option value="">Pilih bay</option>` +
+    bays.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join("") +
+    `<option value="__lain__">Lainnya (ketik manual)</option>`;
+  sel.onchange=()=>{
+    document.getElementById("f_Bay_manual").style.display = sel.value==="__lain__" ? "block":"none";
+  };
+  if(selectedBay){
+    if(bays.indexOf(selectedBay)!==-1){
+      sel.value=selectedBay;
+    }else{
+      sel.value="__lain__";
+      document.getElementById("f_Bay_manual").style.display="block";
+      document.getElementById("f_Bay_manual").value=selectedBay;
+    }
+  }
+}
+
+function onLokasiSUTTChange(){
+  const v=document.getElementById("f_LokasiSUTT").value;
+  document.getElementById("f_LokasiSUTT_manual").style.display = v==="__lain__" ? "block":"none";
+}
+
+// Validasi: pastikan semua kolom rencana kerja terisi sebelum data dikirim ke server.
+// Mengembalikan array label kolom yang masih kosong (array kosong = form sudah lengkap).
+function validateRencanaForm(){
+  const missing=[];
+  const g=id=>{ const el=document.getElementById(id); return el?el.value.trim():""; };
+  const checks=[
+    ["f_Tanggal","Tanggal"],["f_Unit","Unit Pelaksana"],["f_Status","Status"],
+    ["f_Pihak","Internal/Eksternal"],["f_Terencana","Terencana/Tidak Terencana"],
+    ["f_Judul","Judul Pekerjaan"],["f_JenisPekerjaan","Jenis Pekerjaan"],
+    ["f_Ketinggian","Bekerja di Ketinggian"],["f_LinkIzinKerja","Link Izin Kerja (WP)"],
+    ["f_PJ","Penanggung Jawab Pekerjaan"],["f_PK3","Pengawas K3"],["f_PP","Pengawas Pekerjaan"],
+    ["f_JumlahPelaksana","Jumlah Pelaksana"]
+  ];
+  checks.forEach(([id,label])=>{ if(!g(id)) missing.push(label); });
+
+  const jenisKonstruksi=g("f_JenisKonstruksi");
+  if(jenisKonstruksi==="Gardu Induk"){
+    if(!resolveSelect("f_LokasiGI","f_LokasiGI_manual")) missing.push("Lokasi GI");
+    if(!resolveSelect("f_Bay","f_Bay_manual")) missing.push("Bay");
+  }else{
+    if(!resolveSelect("f_LokasiSUTT","f_LokasiSUTT_manual")) missing.push("Lokasi SUTT/SUTET");
+  }
+  return missing;
+}
+
 async function saveRencana(){
+  const missing = validateRencanaForm();
+  if(missing.length>0){
+    const shown = missing.slice(0,4).join(", ");
+    const sisa = missing.length>4 ? ` (+${missing.length-4} lainnya)` : "";
+    toast("Lengkapi dulu: "+shown+sisa);
+    return;
+  }
+
   const g=id=>document.getElementById(id).value.trim();
   const tglDate = isoToDate(g("f_Tanggal"));
   const payload = {
     Tanggal: fmtDMY(tglDate), Unit:g("f_Unit"), Pihak:g("f_Pihak"), Status:g("f_Status"),
     Terencana:g("f_Terencana"), LinkIzinKerja:g("f_LinkIzinKerja"), Judul:g("f_Judul"),
     JenisKonstruksi:g("f_JenisKonstruksi"), JenisPekerjaan:g("f_JenisPekerjaan"),
-    LokasiGI:g("f_LokasiGI"), Bay:g("f_Bay"), LokasiSUTT:g("f_LokasiSUTT"), Ketinggian:g("f_Ketinggian"),
+    LokasiGI: resolveSelect("f_LokasiGI","f_LokasiGI_manual"),
+    Bay: resolveSelect("f_Bay","f_Bay_manual"),
+    LokasiSUTT: resolveSelect("f_LokasiSUTT","f_LokasiSUTT_manual"),
+    Ketinggian:g("f_Ketinggian"),
     PJ:g("f_PJ"), PK3:g("f_PK3"), PP:g("f_PP"), JumlahPelaksana:g("f_JumlahPelaksana")
   };
-  if(!payload.Judul){ toast("Judul pekerjaan wajib diisi"); return; }
   const btn=document.getElementById("btnSaveRencana");
   btn.disabled=true; btn.textContent="Menyimpan...";
   try{
@@ -750,9 +976,18 @@ async function hapusAlatUji(id){
 
 let pendingPhotos=[null,null];
 
-function openAlatUjiForm(id){
+async function openAlatUjiForm(id){
   STATE.editingId=id||null;
   pendingPhotos=[null,null];
+  openSheet(`
+    <div class="sheet-handle"></div>
+    <div style="padding:36px 0;text-align:center;">
+      <div class="loader"></div>
+      <div style="margin-top:10px;color:var(--teks-lemah);font-size:13px;">Memuat form...</div>
+    </div>
+  `);
+  if(STATE.masterPromise) await STATE.masterPromise;
+
   const data = id ? (STATE.alatujiCache||[]).find(r=>r.ID===id) : null;
   const m=STATE.master||{};
   const opt=(arr)=> (arr||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
@@ -764,7 +999,12 @@ function openAlatUjiForm(id){
     <div class="sub">Silakan lengkapi form berikut</div>
 
     <div class="field"><label>No. Identifikasi / Serial</label>
-      <input type="text" id="a_Serial" placeholder="Nomor seri alat"></div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="a_Serial" placeholder="Nomor seri alat" style="flex:1;">
+        <button type="button" class="icon-btn" style="width:44px;flex-shrink:0;font-size:17px;" title="Scan Barcode" onclick="openScanner()">📷</button>
+      </div>
+      <div style="font-size:11px;color:var(--teks-lemah);margin-top:5px;">Ketuk ikon kamera untuk scan barcode alat — Nama Alat, Merk &amp; Tipe akan terisi otomatis jika ditemukan di database.</div>
+    </div>
     <div class="field"><label>Nama Alat Uji</label>
       <input type="text" id="a_NamaAlat" list="dl_alat" placeholder="Nama alat uji">
       <datalist id="dl_alat">${opt(m.NamaAlatUji)}</datalist></div>
@@ -775,8 +1015,12 @@ function openAlatUjiForm(id){
     <div class="field"><label>Tanggal</label><input type="date" id="a_Tanggal" value="${fmtISO(new Date())}"></div>
     <div class="field"><label>PIC</label><input type="text" id="a_PIC" placeholder="Nama PIC"></div>
     <div class="field"><label>Lokasi</label>
-      <input type="text" id="a_Lokasi" list="dl_lokasi" placeholder="Lokasi alat">
-      <datalist id="dl_lokasi">${opt(m.LokasiAlatUji)}</datalist>
+      <select id="a_Lokasi" onchange="onLokasiAlatChange()">
+        <option value="">Pilih lokasi</option>
+        ${opt(ALATUJI_LOKASI_LIST)}
+        <option value="__lain__">Lainnya (ketik manual)</option>
+      </select>
+      <input type="text" id="a_Lokasi_manual" placeholder="Ketik lokasi" style="margin-top:8px;display:none;">
       <button type="button" class="btn btn-outline" style="margin-top:8px;" onclick="ambilLokasi()">📍 Ambil Lokasi GPS Saat Ini</button>
       <input type="hidden" id="a_Lat" value="${data?data.Latitude||"":""}">
       <input type="hidden" id="a_Lng" value="${data?data.Longitude||"":""}">
@@ -827,13 +1071,32 @@ function openAlatUjiForm(id){
   if(data){
     const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||""; };
     set("a_Serial",data.Serial); set("a_NamaAlat",data.NamaAlat); set("a_Merk",data.Merk); set("a_Tipe",data.Tipe);
-    set("a_PIC",data.PIC); set("a_Lokasi",data.Lokasi); set("a_Keterangan",data.Keterangan);
+    set("a_PIC",data.PIC); set("a_Keterangan",data.Keterangan);
     if(data.Tanggal){ /* Tanggal dari server format dd/MM/yyyy, konversi ke ISO jika perlu */ }
+
+    // Lokasi (dengan fallback manual jika tidak ada di daftar GI baku)
+    if(data.Lokasi){
+      const lokasiSelect=document.getElementById("a_Lokasi");
+      const ada = Array.from(lokasiSelect.options).some(o=>o.value===data.Lokasi);
+      if(ada){
+        lokasiSelect.value=data.Lokasi;
+      }else{
+        lokasiSelect.value="__lain__";
+        document.getElementById("a_Lokasi_manual").style.display="block";
+        document.getElementById("a_Lokasi_manual").value=data.Lokasi;
+      }
+    }
+
     ["Kelengkapan","Kondisi","Bersih"].forEach(k=>{
       const key=k.toLowerCase();
       document.querySelectorAll(`#a_${key}_group .radio-opt`).forEach(x=>x.classList.toggle("sel", x.dataset.v===data[k]));
     });
   }
+}
+
+function onLokasiAlatChange(){
+  const v=document.getElementById("a_Lokasi").value;
+  document.getElementById("a_Lokasi_manual").style.display = v==="__lain__" ? "block":"none";
 }
 
 function ambilLokasi(){
@@ -845,6 +1108,76 @@ function ambilLokasi(){
     document.getElementById("a_Lng").value=pos.coords.longitude;
     status.textContent=`Lokasi tersimpan: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
   },err=>{ status.textContent="Gagal mengambil lokasi: "+err.message; },{enableHighAccuracy:true,timeout:10000});
+}
+
+/* ---------- SCAN BARCODE ALAT UJI ---------- */
+let html5QrScanner=null;
+let scanHandled=false;
+
+function openScanner(){
+  scanHandled=false;
+  document.getElementById("qrStatus").textContent="Menyalakan kamera...";
+  document.getElementById("scannerOverlay").classList.add("open");
+  setTimeout(()=>{
+    if(typeof Html5Qrcode==="undefined"){
+      document.getElementById("qrStatus").textContent="Modul scanner gagal dimuat. Cek koneksi internet lalu coba lagi.";
+      return;
+    }
+    try{
+      html5QrScanner = new Html5Qrcode("qrReader");
+      const scanConfig = { fps: 10, qrbox: 230 };
+      try{
+        if(window.Html5QrcodeSupportedFormats){
+          const F=window.Html5QrcodeSupportedFormats;
+          scanConfig.formatsToSupport=[F.QR_CODE,F.CODE_128,F.CODE_39,F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.ITF];
+        }
+      }catch(e){}
+      html5QrScanner.start(
+        { facingMode: "environment" },
+        scanConfig,
+        onScanSuccess,
+        ()=>{ /* abaikan kegagalan pembacaan per-frame */ }
+      ).catch(err=>{
+        document.getElementById("qrStatus").textContent="Gagal membuka kamera: "+err;
+      });
+    }catch(err){
+      document.getElementById("qrStatus").textContent="Scanner tidak tersedia: "+err.message;
+    }
+  },250);
+}
+
+function closeScanner(){
+  if(html5QrScanner){
+    const s=html5QrScanner;
+    html5QrScanner=null;
+    s.stop().then(()=>s.clear()).catch(()=>{});
+  }
+  document.getElementById("scannerOverlay").classList.remove("open");
+}
+
+async function onScanSuccess(decodedText){
+  if(scanHandled) return; // cegah callback terpanggil berkali-kali untuk 1 hasil scan yang sama
+  scanHandled=true;
+  const status=document.getElementById("qrStatus");
+  if(status) status.textContent="Kode terbaca: "+decodedText;
+  closeScanner();
+
+  const serialInput=document.getElementById("a_Serial");
+  if(serialInput) serialInput.value=decodedText;
+
+  toast("Mencari data alat...");
+  try{
+    const info = await apiGet("lookupAlat",{kode:decodedText});
+    if(info && info.found){
+      const set=(id,v)=>{ const el=document.getElementById(id); if(el && v) el.value=v; };
+      set("a_NamaAlat", info.NamaAlat);
+      set("a_Merk", info.Merk);
+      set("a_Tipe", info.Tipe);
+      toast("Data alat ditemukan ✅");
+    }else{
+      toast("Kode tidak ditemukan di database, silakan isi manual");
+    }
+  }catch(e){ toast("Gagal mencari data: "+e.message); }
 }
 
 function handlePhoto(e,idx){
@@ -868,7 +1201,7 @@ async function saveAlatUji(){
   const payload={
     Serial:g("a_Serial"), NamaAlat:g("a_NamaAlat"), Merk:g("a_Merk"), Tipe:g("a_Tipe"),
     Tanggal: (()=>{ const v=g("a_Tanggal"); return v? fmtDMY(isoToDate(v)) : ""; })(),
-    PIC:g("a_PIC"), Lokasi:g("a_Lokasi"), Latitude:g("a_Lat"), Longitude:g("a_Lng"),
+    PIC:g("a_PIC"), Lokasi:resolveSelect("a_Lokasi","a_Lokasi_manual"), Latitude:g("a_Lat"), Longitude:g("a_Lng"),
     Kelengkapan:sel("a_kelengkapan_group"), Kondisi:sel("a_kondisi_group"), Bersih:sel("a_bersih_group"),
     Keterangan:g("a_Keterangan")
   };
@@ -901,6 +1234,122 @@ function renderAkun(main){
 }
 
 /* ============================================================
+   REKAP PEKERJAAN (per GI/Bay & per Segmen SUTT)
+   ============================================================ */
+function renderRekap(main){
+  const m=STATE.master||{};
+  const giList=Object.keys(m.giBayMap||{}).sort();
+  const mode=STATE.rekapMode||"gi";
+  main.innerHTML=`
+    <div class="page-head">
+      <button class="back-btn" onclick="goto('dashboard')">‹</button>
+      <h2>Rekap Pekerjaan</h2>
+    </div>
+
+    <div class="radio-group" style="margin-bottom:14px;">
+      <div class="radio-opt ${mode==='gi'?'sel':''}" id="rekapModeGI" onclick="setRekapMode('gi')">GI / Bay</div>
+      <div class="radio-opt ${mode==='sutt'?'sel':''}" id="rekapModeSUTT" onclick="setRekapMode('sutt')">SUTT/SUTET</div>
+    </div>
+
+    <div id="rekapFilterGI" class="${mode==='gi'?'':'hidden'}">
+      <div class="field"><label>Lokasi GI</label>
+        <select id="rk_GI" onchange="onRekapGIChange()">
+          <option value="">Pilih GI</option>
+          ${giList.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field"><label>Bay</label>
+        <select id="rk_Bay"><option value="">Semua Bay</option></select>
+      </div>
+    </div>
+
+    <div id="rekapFilterSUTT" class="${mode==='sutt'?'':'hidden'}">
+      <div class="field"><label>Segmen SUTT/SUTET</label>
+        <select id="rk_SUTT">
+          <option value="">Pilih segmen</option>
+          ${DATASUTT_LIST.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field"><label>Dari Tanggal</label><input type="date" id="rk_Dari"></div>
+      <div class="field"><label>Sampai Tanggal</label><input type="date" id="rk_Sampai"></div>
+    </div>
+    <div style="font-size:11px;color:var(--teks-lemah);margin:-6px 2px 12px;">Kosongkan tanggal untuk menampilkan seluruh riwayat.</div>
+
+    <button class="btn btn-primary" onclick="loadRekap()">Tampilkan Rekap</button>
+
+    <div id="rekapResult" style="margin-top:16px;"></div>
+  `;
+}
+
+function setRekapMode(mode){
+  STATE.rekapMode=mode;
+  document.getElementById("rekapModeGI").classList.toggle("sel", mode==="gi");
+  document.getElementById("rekapModeSUTT").classList.toggle("sel", mode==="sutt");
+  document.getElementById("rekapFilterGI").classList.toggle("hidden", mode!=="gi");
+  document.getElementById("rekapFilterSUTT").classList.toggle("hidden", mode!=="sutt");
+}
+
+function onRekapGIChange(){
+  const gi=document.getElementById("rk_GI").value;
+  const m=STATE.master||{};
+  const bays=(m.giBayMap && m.giBayMap[gi]) || [];
+  const sel=document.getElementById("rk_Bay");
+  sel.innerHTML = `<option value="">Semua Bay</option>` + bays.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join("");
+}
+
+async function loadRekap(){
+  const mode=STATE.rekapMode||"gi";
+  const dari=document.getElementById("rk_Dari").value;
+  const sampai=document.getElementById("rk_Sampai").value;
+  const resultEl=document.getElementById("rekapResult");
+  const params={ mode };
+
+  if(mode==="gi"){
+    const gi=document.getElementById("rk_GI").value;
+    if(!gi){ toast("Pilih lokasi GI terlebih dahulu"); return; }
+    params.gi=gi;
+    params.bay=document.getElementById("rk_Bay").value;
+  }else{
+    const sutt=document.getElementById("rk_SUTT").value;
+    if(!sutt){ toast("Pilih segmen SUTT terlebih dahulu"); return; }
+    params.sutt=sutt;
+  }
+  if(dari) params.dari=fmtDMY(isoToDate(dari));
+  if(sampai) params.sampai=fmtDMY(isoToDate(sampai));
+
+  resultEl.innerHTML=`<div class="loader"></div>`;
+  try{
+    const rows=await apiGet("rekap",params);
+    if(rows.length===0){ resultEl.innerHTML=`<div class="empty-state"><div class="ic">📭</div>Tidak ada pekerjaan ditemukan</div>`; return; }
+    resultEl.innerHTML = rows.map(rekapCard).join("");
+  }catch(e){ resultEl.innerHTML=`<div class="empty-state">Gagal memuat rekap.<br>${esc(e.message)}</div>`; }
+}
+
+function rekapCard(r){
+  const progBadgeMap={SELESAI:"selesai",PROSES:"proses",BATAL:"batal"};
+  const progClass=progBadgeMap[r.Progres]||"belum";
+  const progLabel=r.Progres||"BELUM UPDATE";
+  const lokasiLine = r.JenisKonstruksi==="Gardu Induk"
+    ? `${esc(r.LokasiGI||"-")} / Bay ${esc(r.Bay||"-")}`
+    : esc(r.LokasiSUTT||"-");
+  return `
+    <div class="work-card ${r.Status==="Padam"?"padam":""}">
+      <div class="top">
+        <h4>${esc(r.Tanggal)} — ${esc(r.Judul)}</h4>
+        <span class="badge ${progClass}">${esc(progLabel)}</span>
+      </div>
+      <div class="meta">
+        ${lokasiLine}<br>
+        ${esc(r.Unit)} · ${esc(r.Pihak)} · ${esc(r.JenisPekerjaan||"-")}<br>
+        PJ: ${esc(r.PJ||"-")}
+      </div>
+    </div>`;
+}
+
+/* ============================================================
    SHEET (bottom modal) HELPERS
    ============================================================ */
 function openSheet(html){
@@ -918,6 +1367,9 @@ window.goto=goto; window.openRencanaForm=openRencanaForm; window.hapusRencana=ha
 window.shiftTgl=shiftTgl; window.kirimWA=kirimWA; window.openProgresForm=openProgresForm;
 window.openAlatUjiForm=openAlatUjiForm; window.hapusAlatUji=hapusAlatUji; window.ambilLokasi=ambilLokasi;
 window.handlePhoto=handlePhoto; window.closeSheet=closeSheet; window.doLogout=doLogout;
+window.onLokasiGIChange=onLokasiGIChange; window.onLokasiSUTTChange=onLokasiSUTTChange;
+window.onLokasiAlatChange=onLokasiAlatChange; window.openScanner=openScanner; window.closeScanner=closeScanner;
+window.setRekapMode=setRekapMode; window.onRekapGIChange=onRekapGIChange; window.loadRekap=loadRekap;
 </script>
 </body>
 </html>

@@ -207,7 +207,7 @@
    KONFIGURASI — ganti dengan URL Web App Apps Script Anda
    ============================================================ */
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbyBkbVLJG2QctpEH9Pr_lBq59tmkwx5hbw86X7WWpTo7lEUbPprSs8VcKloJHE5Z99gAw/exec"
+  API_URL: "https://script.google.com/macros/s/AKfycbwqnx3PbYia4QO8KXv23XhiY6lSDAkQTjpDSiSLgKKDaf-1k3hJwz7yY9Owa5jOwed2Kg/exec"
 };
 
 /* Daftar tetap Jenis Pekerjaan (sesuai permintaan, tidak perlu ke server) */
@@ -274,8 +274,36 @@ const ALATUJI_LOKASI_LIST = [
   "PLTA 150KV SIPAN 1","PLTA 150KV SIPAN 2","GITET 275KV NEW PADANG SIDEMPUAN","GI 150KV NEW PADANG SIDEMPUAN",
   "GI 150KV SIBUHUAN","GI 150KV PANYABUNGAN","GI 150KV KISARAN","GI 150KV KUALA TANJUNG",
   "GI 150KV RANTAU PRAPAT","GI 150KV AEK KANOPAN","GI 150KV SIMANGKE","GI 150KV TANJUNG BALAI",
-  "GI 150KV KOTA PINANG","GITET 275KV KUALA TANJUNG","GI 150KV MARTABE"
+  "GI 150KV KOTA PINANG","GITET 275KV KUALA TANJUNG","GI 150KV MARTABE","GI 150KV LABUHAN BILIK"
 ];
+
+/* Daftar tetap Lokasi GI -> daftar Bay (sesuai data Funcloc Januari 2026), dipakai untuk
+   dropdown Lokasi GI & Bay di form Rencana Kerja dan halaman Rekap. Di-hardcode di sini
+   (bukan dari sheet DataGI) supaya loading jauh lebih cepat dan tidak tergantung ukuran/
+   kondisi sheet DataGI di spreadsheet. Kalau ada GI/Bay baru di masa depan, minta bantuan
+   update array ini (upload file Funcloc terbaru juga bisa). */
+const GI_BAY_MAP = {
+  "GI 150KV SIBOLGA": ["BUSBAR A 150kV", "PHT 150kV TRTUG 2", "CUBICLE TRF 2", "PHT 150kV TRTUG 1", "TRF 3 150/20kV", "PHT 150kV LBAGN 2", "COUPLE 150kV", "PHT 150kV SPAN1", "PHT 150kV MRTBE 1", "PHT 150kV LBAGN 1", "BUSBAR B 150kV", "PHT 150kV SPAN2", "PHT 150kV MRTBE 2", "TRF 2 150/20kV", "CUBICLE TRF 3"],
+  "GI 150KV LABUHAN ANGIN": ["PHT 150kV GEN 1", "PHT 150kV GEN 2", "CUBICLE TRF 2", "PHT 150kV SBOGA 1", "TRF 2 150/20kV", "BUSBAR A 150kV", "TRF 1 150/20kV", "BUSBAR B 150kV", "CUBICLE TRF 1", "PHT 150kV SBOGA 2", "COUPLE 150kV"],
+  "GI 150KV PADANG SIDEMPUAN": ["TRF 2 150/20kV", "CUBICLE TRF 2", "PHT 150kV MRTBE 1", "PHT 150 KV NPSDM 1", "PHT 150kV GNTUA", "PHT 150kV RTPAT", "BUSBAR A 150kV", "COUPLE 150kV", "BUSBAR B 150kV", "CUBICLE TRF 1", "CUBICLE TRF 3", "PHT 150 KV NPSDM 2", "PHT 150kV MRTBE 2", "TRF 3 150/20kV"],
+  "GI 150KV GUNUNG TUA": ["PHT SBHAN 2", "BUSBAR A 150kV", "CUBICLE TRF 1", "PHT SBHAN 1", "TRF 1 150/20kV", "TRF 2 150/20kV", "PHT 150kV PSDEM", "CUBICLE TRF 2", "PHT 150kV RTPAT"],
+  "PLTA 150KV SIPAN 1": ["PLTA SIPAN", "PHT 150kV SBOGA 1", "BUSBAR A 150kV", "PHT 150kV SPAN2"],
+  "PLTA 150KV SIPAN 2": ["PHT 150kV SPAN1", "BUSBAR A 150kV", "PLTA SIPAN", "PHT 150kV SBOGA 2"],
+  "GITET 275KV NEW PADANG SIDEMPUAN": ["SRULA 2 DIAMETER 2", "IBT 1", "IBT 2", "SRULA 1 DIAMETER 1", "B2 DIAMETER 2 275kV", "B3 DIAMETER 3 275kV", "A2 DIAMETER 2 275kV", "A3 DIAMETER 3 275kV", "A1 DIAMETER 1 275kV", "B4 DIAMETER 4 275kV", "AB3 DIAMETER 3 275kV", "PYBUH 1 DIAMETER 3", "A4 DIAMETER 4 275kV", "REAKTOR", "AB4 DIAMETER 4 275kV", "B1 DIAMETER 1 275kV", "AB1 DIAMETER 1 275kV", "AB2 DIAMETER 2 275kV", "BUSBAR B 275kV", "BUSBAR A 275kV", "PYBUH 2 DIAMETER 4"],
+  "GI 150KV NEW PADANG SIDEMPUAN": ["BUSBAR A 150kV", "COUPLE B 150kV", "TRF 1 150/20 KV", "PHT 150kV PSDEM 2", "PHT PYBGN 2 150kV", "INC IBT 1 275/150kV", "INC IBT 2 275/150kV", "CUBICLE TRF 1", "PHT PYBGN 1 150kV", "PHT 150kV PSDEM 1", "BUSBAR B 150kV"],
+  "GI 150KV SIBUHUAN": ["COUPLE 150 kV", "CUBICLE TRF 1", "TRF 1 150/20 kV", "PHT GNTUA 2", "BUSBAR A 150 kV", "PHT GNTUA 1", "BUSBAR B 150 kV"],
+  "GI 150KV PANYABUNGAN": ["PHT SMGP 2", "TRF 1 150/20 KV", "PHT NPSDM 2", "PHT SMGP 1", "CUBICLE TRF 1", "COUPLE 150kV", "BUSBAR A 150kV", "PHT NPSDM 1", "BUSBAR B 150kV"],
+  "GI 150KV KISARAN": ["PHT 150kV RTPAT", "PHT 150kV SMGKE 2", "PHT 150kV AKNPN", "CUBICLE TRF 2", "TRF 2 150/20kV", "BUSBAR B 150kV", "PHT 150kV SMGKE 1", "TRF 1 150/20kV", "BUSBAR A 150kV", "COUPLE 150kV", "PHT TBLAI 2", "CUBICLE TRF 1", "PHT TBLAI 1"],
+  "GI 150KV KUALA TANJUNG": ["TRF 3 150/20kV", "COUPLE 150kV", "CUBICLE TRF 1", "BUSBAR A 150kV", "PHT 150kV SMGKE 1", "TRF 1 150/20kV", "BUSBAR B 150kV", "CUBICLE TRF 2", "IBT 2.1 275/150kV LV", "PHT 150kV TBING 1", "CUBICLE TRF 3", "IBT 1.1 275/150kV LV", "PHT 150kV TBING 2", "TRF 2 150/20kV", "PHT 150kV SMGKE 2"],
+  "GI 150KV RANTAU PRAPAT": ["TRF 2 150/20kV", "CUBICLE TRF 1", "PHT 150kV PSDEM", "PHT LBLIK 1", "TRF 3 150/20kV", "CAPASITOR BANK", "BUSBAR B 150kV", "CUBICLE TRF 3", "CUBICLE TRF 2", "PHT 150kV KTPNG 1", "PHT LBLIK 2", "PHT 150kV KTPNG 2", "TRF 1 150/20kV", "COUPLE 150kV", "PHT 150kV KSRAN", "PHT 150kV GNTUA", "PHT 150kV HSANG", "BUSBAR A 150kV"],
+  "GI 150KV AEK KANOPAN": ["TRF 1 150/20kV", "CUBICLE TRF 2", "PHT 150kV HSANG", "PHT 150kV KSRAN", "BUSBAR A 150kV", "TRF 2 150/20kV", "CUBICLE TRF 1"],
+  "GI 150KV SIMANGKE": ["TRF 2 150/20 KV", "PHT 150KV KSRAN 1", "PHT 150KV KSRAN 2", "BUSBAR B 150 KV", "BUSBAR A 150 KV", "PHT 150KV KTJNG 1", "COUPLE 150 KV", "TRF 1 150/20 KV", "CUBICLE TRF 2", "PHT 150KV KTJNG 2", "CAPASITOR BANK", "CUBICLE TRF 1"],
+  "GI 150KV TANJUNG BALAI": ["BUSBAR B 150 kV", "PHT KSRAN 2", "PHT KSRAN 1", "BUSBAR A 150 kV", "COUPLE 150 kV", "TRF 1 150/20 kV", "CUBICLE TRF 1"],
+  "GI 150KV LABUHAN BILIK": ["PHT RTPAT 2", "CUBICLE TRF 1", "BUSBAR A 150 kV", "COUPLE 150 kV", "BUSBAR B 150 kV", "TRF 1 150/20 kV", "PHT RTPAT 1"],
+  "GI 150KV KOTA PINANG": ["BAY BBATU 1", "BAY CUBICLE TRF 2", "BAY COUPLE 150 KV", "KTPNG BAY TRF 2", "BAY BUSBAR A 150", "BAY KAPASITOR", "BAY RTPAT 1", "BAY RTPAT 2", "BAY BUSBAR B 150", "BAY CUBICLE TRF 1", "TRF 1 150/20kV", "BAY BBATU 2"],
+  "GITET 275KV KUALA TANJUNG": ["IBT 1.1 275/150kV HV", "IBT 1.2 275/150kV HV", "IBT 2.1 275/150kV HV", "IBT 2.2 275/150kV HV"],
+  "GI 150KV MARTABE": ["PHT 150kV PSDEM 2", "BUSBAR A 150kV", "TRF 1 150/20kV", "PHT 150kV PSDEM 1", "GEDUNG GI 150kV MARTABE", "CUBICLE TRF 1", "PHT 150kV SBOGA 1", "PHT 150kV SBOGA 2", "PHT 150kV MNING", "BUSBAR B 150kV", "COUPLE 150kV"]
+};
 
 /* ============================================================
    STATE
@@ -546,9 +574,7 @@ function workCard(r, mode){
         ${mode==="rencana" ? badgeStatus : `<span class="badge ${progClass}">${esc(progLabel)}</span>`}
       </div>
       <div class="meta">
-        ${esc(r.Pihak)} · ${esc(r.JenisPekerjaan||"-")}<br>
-        PJ: ${esc(r.PJ||"-")} &nbsp;|&nbsp; PK3: ${esc(r.PK3||"-")} &nbsp;|&nbsp; PP: ${esc(r.PP||"-")}
-        ${r.LinkIzinKerja ? `<br><a href="${esc(r.LinkIzinKerja)}" target="_blank" rel="noopener">Lihat izin kerja (WP)</a>`:""}
+        ${esc(r.Pihak)} · ${esc(r.JenisPekerjaan||"-")}
       </div>
       <div class="actions">
         ${mode==="rencana" ? `
@@ -601,7 +627,7 @@ async function openRencanaForm(id){
   const rows = STATE.rencanaCache[fmtDMY(STATE.tglRencana)]||[];
   const data = id ? rows.find(r=>r.ID===id) : null;
   const m = STATE.master||{};
-  const giList = Object.keys(m.giBayMap||{}).sort();
+  const giList = Object.keys(GI_BAY_MAP).sort();
   const opt=(arr)=> (arr||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
   const optJenis=(arr)=> (arr||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
 
@@ -762,7 +788,7 @@ function onLokasiGIChange(){
 
 function populateBayOptions(gi, selectedBay){
   const m=STATE.master||{};
-  const bays=(m.giBayMap && m.giBayMap[gi]) || [];
+  const bays = GI_BAY_MAP[gi] || [];
   const sel=document.getElementById("f_Bay");
   if(!sel) return;
   sel.innerHTML = `<option value="">Pilih bay</option>` +
@@ -1239,7 +1265,7 @@ function renderAkun(main){
    ============================================================ */
 function renderRekap(main){
   const m=STATE.master||{};
-  const giList=Object.keys(m.giBayMap||{}).sort();
+  const giList=Object.keys(GI_BAY_MAP).sort();
   const mode=STATE.rekapMode||"gi";
   main.innerHTML=`
     <div class="page-head">
@@ -1296,7 +1322,7 @@ function setRekapMode(mode){
 function onRekapGIChange(){
   const gi=document.getElementById("rk_GI").value;
   const m=STATE.master||{};
-  const bays=(m.giBayMap && m.giBayMap[gi]) || [];
+  const bays = GI_BAY_MAP[gi] || [];
   const sel=document.getElementById("rk_Bay");
   sel.innerHTML = `<option value="">Semua Bay</option>` + bays.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join("");
 }
